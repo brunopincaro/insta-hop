@@ -15,7 +15,7 @@
  * @wordpress-plugin
  * Plugin Name:       InstaHOP
  * Plugin URI:        https://github.com/brunopincaro/instahop
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
+ * Description:       Import to the chosen post type your liked content on Instagram.
  * Version:           1.0.0
  * Author:            Bruno Pincaro
  * Author URI:        http://brunopincaro.com

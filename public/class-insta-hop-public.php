@@ -52,6 +52,8 @@ class Insta_Hop_Public {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
+		// ------------- INSTAHOP
+        $this->insta_hop_options = get_option($this->plugin_name);
 	}
 
 	/**
@@ -100,4 +102,81 @@ class Insta_Hop_Public {
 
 	}
 
+	// --------------------- INSTAHOP
+	/**
+     * Cleanup functions depending on each checkbox returned value in admin
+     *
+     * @since    1.0.0
+     */
+    // Cleanup head
+    public function insta_hop_cleanup() {
+        if($this->insta_hop_options['cleanup']){
+            remove_action( 'wp_head', 'rsd_link' );                 // RSD link
+            remove_action( 'wp_head', 'feed_links_extra', 3 );            // Category feed link
+            remove_action( 'wp_head', 'feed_links', 2 );                // Post and comment feed links
+            remove_action( 'wp_head', 'index_rel_link' );
+            remove_action( 'wp_head', 'wlwmanifest_link' );
+            remove_action( 'wp_head', 'parent_post_rel_link', 10, 0 );        // Parent rel link
+            remove_action( 'wp_head', 'start_post_rel_link', 10, 0 );       // Start post rel link
+            remove_action( 'wp_head', 'rel_canonical', 10, 0 );
+            remove_action( 'wp_head', 'wp_shortlink_wp_head', 10, 0 );
+            remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0 ); // Adjacent post rel link
+            remove_action( 'wp_head', 'wp_generator' );               // WP Version
+            remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+            remove_action( 'wp_print_styles', 'print_emoji_styles' );
+        }
+    }   
+    // Cleanup head
+    public function insta_hop_remove_x_pingback($headers) {
+        if(!empty($this->insta_hop_options['cleanup'])){
+            unset($headers['X-Pingback']);
+            return $headers;
+        }
+    }
+    // Remove Comment inline CSS
+    public function insta_hop_remove_comments_inline_styles() {
+        if(!empty($this->insta_hop_options['comments_css_cleanup'])){
+            global $wp_widget_factory;
+            if ( has_filter( 'wp_head', 'wp_widget_recent_comments_style' ) ) {
+                remove_filter( 'wp_head', 'wp_widget_recent_comments_style' );
+            }
+
+            if ( isset($wp_widget_factory->widgets['WP_Widget_Recent_Comments']) ) {
+                remove_action( 'wp_head', array($wp_widget_factory->widgets['WP_Widget_Recent_Comments'], 'recent_comments_style') );
+            }
+        }
+    }
+    // Remove gallery inline CSS
+    public function insta_hop_remove_gallery_styles($css) {
+        if(!empty($this->insta_hop_options['gallery_css_cleanup'])){
+            return preg_replace( "!<style type='text/css'>(.*?)</style>!s", '', $css );
+        }
+    }
+    // Add post/page slug
+    public function insta_hop_body_class_slug( $classes ) {
+        if(!empty($this->insta_hop_options['body_class_slug'])){
+            global $post;
+            if(is_singular()){
+                $classes[] = $post->post_name;
+            }
+        }
+                return $classes;
+    }    
+    // Load jQuery from CDN if available
+    public function insta_hop_cdn_jquery(){
+        if(!empty($this->insta_hop_options['jquery_cdn'])){
+            if(!is_admin()){
+                if(!empty($this->insta_hop_options['cdn_provider'])){
+                    $link = $this->insta_hop_options['cdn_provider'];
+                }else{
+                    $link = 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js';
+                }
+                $try_url = @fopen($link,'r');
+                if( $try_url !== false ) {
+                    wp_deregister_script( 'jquery' );
+                    wp_register_script('jquery', $link, array(), null, false);
+                }
+            }
+        }
+    }
 }
